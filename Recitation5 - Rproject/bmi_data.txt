@@ -1,0 +1,13 @@
+"Name" "Weight" "Height"
+"1" "Ali" 71 1.9
+"2" "Osman" 86 1.68
+"3" "Zeynep" 56 1.76
+"4" "Yonca" 63 1.82
+"5" "Gonca" 60 1.64
+"6" "Halil" 73 1.74
+"7" "Mert" 61 1.59
+"8" "Cenk" 55 1.55
+"9" "Hasan" 57 1.73
+"10" "Ayse" 69 1.66
+"11" "Melis" 66 1.54
+"12" "Yeliz" 92 1.63

@@ -1,0 +1,461 @@
+---
+title: "Stat 292 - Recitation 5"
+subtitle: "R-project, Pipelines, Avoid Loops"
+author: "Orçun Oltulu"
+date: "14 / 4 / 2021"
+output: pdf_document
+linkcolor: black
+geometry: margin = 1.05in
+fontsize: 12pt
+---
+
+```{r include = FALSE}
+# knitr::opts_chunk$set(echo=FALSE,results='hide',fig.show = 'hide')
+```
+
+# Exercise 1:
+
+### Part A: 
+
+Create an R project for Recitation 5 on your Desktop. Then, open a new R Script.
+
+### Part B: 
+
+Check the working directory.
+
+```{r}
+getwd()
+```
+
+### Part C: 
+
+Create a 10x5 matrix called A, give row and column names. Fill with random numbers from standard normal distribution. (Use set.seed(292))
+
+```{r}
+set.seed(292)
+A <- matrix(rnorm(50), nrow = 10, ncol = 5,
+            dimnames = list(paste("row.", 1:10, sep=""),
+                            paste("col.", 1:5, sep="")))
+```
+
+### Part D: 
+
+Now, export matrix A to a MatrixA.csv file. Check if that .csv file is inside Recitation 5 folder on your Desktop.
+
+```{r}
+write.csv(A, file = "MatrixA.cvs")
+```
+
+### Part E:
+
+Obtain mean values of each column, then export column means to a .txt file. 
+
+```{r}
+write.table(apply(A, 2, mean),
+            "colmeans.txt")
+```
+
+### Part F:
+
+* Open a new R Script, Functions, in Recitation 5 on your Desktop, 
+
+* Write an R function, call myfunction, that given an object, counts the negative values and returns that count. 
+
+* Then, using source() command call the Functions.R in your main script. When you run your code, you will see that myfunction is appeared on your global environment. 
+
+* Using myfunction, find the number of negative values in A.
+
+```{r}
+source("Functions.R")
+```
+
+### Part G: 
+
+* Create some random variables; x,y,z with some random values.
+
+```{r}
+x <- 10
+y <- list(1:10,letters[1:10])
+z <- c("mon","tue","wed","thu","fri","sat","sun")
+
+B <- matrix(rnorm(80,100,2), nrow = 20, ncol = 4,
+            dimnames = list(paste("row.", 1:20, sep=""),
+                            paste("col.", 1:4, sep="")))
+```
+
+* Save them in mydata.RData file.
+
+```{r}
+save(x,y,z,A,B, file = "mydata.RData")
+```
+
+* Clear your global environment, and import .Rdata file.
+
+```{r}
+# to remove all objects
+rm(list = ls())
+```
+
+```{r}
+load("mydata.RData")
+```
+
+* Use ls() command to see the objects you have in your global environment.
+
+```{r}
+ls()
+```
+
+# Exercise 2: tidyverse - magrittr
+
+Import 'tidyverse', 'magrittr', 'dplyr' and 'ISLR' packages. Then, load iris data set from ISLR package. 
+```{r warning=FALSE, results=FALSE, package-options, include=FALSE}
+library(tidyverse)
+library(magrittr)
+library(dplyr)
+library(ISLR)
+```
+
+### Part A: 
+
+Using Pipe operator; 
+
+* Create a sequence 5 to 12. 
+
+* Take the log of that sequence. 
+
+* Round to 2 decimals. 
+
+* Convert them into characters. 
+
+```{r}
+5:12 %>% log %>% round(2) %>% as.character()
+```
+
+### Part B: 
+
+Using Pipe operator; 
+
+* Find the absolute value of each element in matrix A (created in ex.1).
+
+* Round each value to 3 decimals.
+
+* Take transpose. 
+
+* Multiply with A. 
+
+```{r}
+A %>% abs %>% round(3) %>% t %>% '%*%' (A)
+```
+
+### Part C:
+
+Assume that you want to calculate Root Mean Squared Error for a regression model;
+
+$$
+RMSE = \sqrt \frac{\sum_{i=1}^n (Y_i - \hat{Y}_i)^2}{n}
+$$
+
+* Create Y and $\hat{Y}$ as follows;
+
+```{r ehco=TRUE}
+set.seed(292)
+Y <- sample(10:30, 30, replace = T)
+Y_hat <- rnorm(30,3,2) + Y
+```
+
+* Then, calculate RMSE. 
+
+```{r}
+Y %>% '-' (Y_hat) %>%  '^' (2) %>% mean %>% sqrt
+
+# or
+
+Y %>% '-' (Y_hat) %>%  '^' (2) %>% sum %>% '/' (length(Y)) %>% sqrt
+```
+
+### Part D: 
+
+Using aggregate function, find the mean of each variable for each Species.
+
+```{r}
+data(iris)
+iris %>% aggregate(. ~ Species, ., mean)
+```
+
+### Part E: 
+
+For the ones with Petal.Length > 3, find the mean of Sepal Length and Sepal Width of each Species, using aggregate function.
+
+```{r}
+iris %>% 
+  subset(Petal.Length > 3) %>% 
+  aggregate(cbind(Sepal.Length, Sepal.Width) ~ Species, ., mean)
+```
+
+### Part F:
+
+Now using one pipe command; **select** Sepal vs Petal Lengths, plot them on a scatter plot and assign title, change color etc., then, obtain correlation between Sepal and Petal Lengths.  
+
+```{r}
+iris %>%
+  select(Sepal.Length,Petal.Length) %T>% 
+  plot(., main="ScatterPlot",col="Dark Blue", pch=4) %>% 
+  cor()
+```
+
+### Part G: 
+
+Using pipeline, obtain the frequencies of each Species.
+
+```{r}
+iris %$% 
+  table(Species)
+```
+
+# Exercise 3: dplyr
+
+**How to use basic dplyr functions**
+
+The dplyr is an R-package that is used for transformation and summarization of tabular data with rows
+and columns. It includes a set of functions that filter rows, select specific columns, re-order rows, adds new columns and summarizes data.
+
+Moreover, dplyr contains a useful function to perform another common task, which is the “split-applycombine” concept. Compared to base functions in R, the functions in dplyr have an advantage in the sense that they are easier to use, more consistent in the syntax, and aim to analyze data frames instead of just vectors.
+
+### Part A:
+
+Using the same iris data set; **select** Sepal Length and Species and print the first 10 rows of the data frame.
+
+```{r}
+iris %>% 
+  select(c(Sepal.Length,Species)) %>% 
+  head(.,10)
+```
+
+### Part B: 
+
+**Select** Petal.Length Petal.Width and print the first 10 rows of the data frame.
+
+```{r}
+iris %>% 
+  select(starts_with("P")) %>% 
+  head(.,10)
+```
+
+### Part C:
+
+Now, **select** all of the numeric variables and print the first 10 rows of the data frame.
+
+```{r}
+iris %>% 
+  select_if(is.numeric) %>% 
+  head(.,10)
+```
+
+### Part D: 
+
+Filter out a subset of Setosa whose Sepal Length ranges 4.4 and 4.8. 
+
+```{r}
+iris %>% 
+  filter(between(Sepal.Length, 4.4, 4.8), Species=="setosa") 
+```
+
+### Part E:
+
+What is the mean value of Petal Length for each Species?
+
+```{r}
+iris %>% 
+  group_by(Species) %>% 
+  summarise(mean(Petal.Length))
+```
+
+### Part F:
+
+Using **mutate()** function create a new column called proportion, which is the ratio of Sepal.Length to Sepal.Width.
+
+```{r}
+iris %<>% 
+  mutate(Proportion = Sepal.Length / Sepal.Width)
+```
+
+### Part G:
+
+Create another new column called Type, if proportion is less than 1.8 then Type is A, else Type is B.
+
+```{r}
+iris %<>% 
+  mutate(Type = ifelse(Proportion < 1.8, "A","B"))
+```
+
+### Part H: 
+
+Count how many observations are assigned Type B for each Species. 
+
+```{r}
+iris %>% 
+  group_by(Species) %>% 
+  filter(Type == "B") %>% 
+  count
+```
+
+# Exercise 4:
+
+1. Generate a random sample from; (use set.seed 292)
+
+* uniform distribution between 10 and 20, sized 5000. 
+
+* normal distribution with mean 15 and standard deviation 2, sized 5000.
+
+* standard normal distribution, sized 5000.
+
+2. Combine those three random samples in a data.frame. 
+
+3. Using a for loop, calculate means of each column, measure run time. 
+
+4. Using apply, calculate means of each column, measure run time. 
+
+5. Using colMeans, calculate means of each column, measure run time. 
+
+```{r}
+set.seed(292)
+smp1 <- runif(5000,10,20)
+smp2 <- rnorm(5000,15,2)
+smp3 <- rnorm(5000)
+
+mydf <- cbind(smp1,smp2,smp3)
+
+## For loop
+system.time({
+  Means <- numeric()
+  for(i in 1:ncol(mydf)){
+    Means[i] <- mean(mydf[,i])
+  }
+})
+
+## apply
+system.time( apply(mydf,2,mean) )
+
+## colMeans
+
+system.time( colMeans(mydf) )
+```
+
+
+### Part B:
+
+Run a simulation on a for loop by follow the three steps below. 
+
+1. Generate 100 different samples each sized 5000 from standard normal distribution. 
+
+2. Apply Shapiro-Wilk Test on each sample for normality. (**Hint:** shapiro.test)
+
+3. Collect p-values and find the proportion of p-values are less than 0.05. 
+
+4. Measure run time. 
+
+```{r}
+system.time({
+  vec <- numeric()
+  vec2 <- numeric()
+  for(i in 1:100){
+    vec <- rnorm(5000)
+    vec2[i] <- shapiro.test(vec)$p.val 
+  }
+})
+```
+### Part C:
+
+Now run this simulation without using a for loop. (There are lots of way to do this, you will see only one of them in the answers, however try to come up with different ideas)
+
+```{r}
+system.time(
+  rnorm(5000*100) %>% 
+    matrix(.,ncol=100, byrow = TRUE) %>% 
+    apply(.,2,function(x) shapiro.test(x)$p.val)
+)
+```
+### Part D: 
+
+First read 'bmi_data.txt' file into R. 
+
+Then **Using a loop**, Calculate Body-mass-index for each person, and create new columns 'BMI' and 'Status' for data frame such that  
+
+$$
+BMI = \frac{\textrm{Weight}}{\textrm{Height}^2}
+$$
+
+&nbsp;
+
+$$
+\textrm{Status} = \left\{
+              \begin{array}{ll}
+                \textrm{underweight},  & BMI \leq 18.5 \\
+                \textrm{normal}, & BMI > 18.5 \quad \& \quad BMI < 24.9 \\
+                \textrm{overweight}, & BMI \ge 24.9
+              \end{array}
+          \right.
+$$
+
+&nbsp;
+
+**Hint:** Before the loop you may want to create empty numeric() and character() variables for BMI and Status so that you can store results and append them to your data frame.
+
+```{r}
+data <- read.table("bmi_data.txt")
+BMI <- numeric()
+Status <- character()
+
+system.time({
+for(i in 1:nrow(data)){
+  
+  BMI[i] <- data$Weight[i] / data$Height[i]^2
+  
+  if(BMI[i] <= 18.5){
+    Status[i] <- "underweight"
+  } else if(BMI[i] > 18.5 & BMI[i] < 24.9){
+    Status[i] <- "normal"
+  } else{
+    Status[i] <- "overweight"
+  }
+  
+}
+
+data <- cbind(data, BMI, Status)
+})
+data
+```
+
+### Part F: 
+
+Now, re-read the data, this time, do the exact operation without using any loop.
+
+```{r}
+data <- read.table("bmi_data.txt")
+system.time({
+data %<>% 
+  mutate(Status = ifelse(Weight/Height^2 <= 18.5,
+                         "underweight",
+                         ifelse(Weight/Height^2 >= 24.9, 
+                                "overweight",
+                                "normal")))
+})
+```
+
+# Additional info: 
+
+A different way to measure elapsed;
+
+```{r echo=TRUE,results='show'}
+# install.packages("devtools")
+# devtools::install_github("jabiru/tictoc")
+library(tictoc)
+
+tic("sleeping")
+print("falling asleep...")
+Sys.sleep(5)
+print("...waking up")
+toc()
+```
+
