@@ -10,4 +10,5 @@ STAT291 - Statistical Computing 2
   * Logistic regression
   * Many models
   * Leaflet
-  * Web scrapping  
+  * Web scrapping 
+  * sqldf
